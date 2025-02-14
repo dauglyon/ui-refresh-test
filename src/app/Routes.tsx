@@ -26,12 +26,10 @@ import {
   useFilteredParams,
   usePageTracking,
 } from '../common/hooks';
-import ORCIDLinkFeature from '../features/orcidlink';
 import { LogIn } from '../features/login/LogIn';
 import { LogInContinue } from '../features/login/LogInContinue';
 import { LoggedOut } from '../features/login/LoggedOut';
 import { SignUp } from '../features/signup/SignUp';
-import ORCIDLinkCreateLink from '../features/orcidlink/CreateLink';
 import { Account } from '../features/account/Account';
 import { AccountInfo } from '../features/account/AccountInfo';
 import { LinkedProviders } from '../features/account/LinkedProviders';
@@ -40,6 +38,13 @@ import { UseAgreements } from '../features/account/UseAgreements';
 import { skipToken } from '@reduxjs/toolkit/dist/query';
 import { getMe } from '../common/api/authService';
 import { CDMRedirect } from '../features/cdm/CDMRedirect';
+import {
+  OrcidLink,
+  OrcidLinkContinue,
+  OrcidLinkStatus,
+  OrcidLinkError,
+} from '../features/account/OrcidLink';
+import { ManageTokens } from '../features/account/ManageTokens';
 
 export const LOGIN_ROUTE = '/login';
 export const SIGNUP_ROUTE = '/signup';
@@ -95,6 +100,19 @@ const Routes: FC = () => {
           path="use-agreements"
           element={<Authed element={<UseAgreements />} />}
         />
+        <Route path="orcidlink" element={<Authed element={<OrcidLink />} />}>
+          <Route index element={<OrcidLinkStatus />} />
+          <Route path="continue/error" element={<OrcidLinkError />} />
+          <Route path="continue/:sessionId" element={<OrcidLinkContinue />} />
+        </Route>
+        <Route
+          path="service-tokens"
+          element={<Authed element={<ManageTokens type={'service'} />} />}
+        />
+        <Route
+          path="dev-tokens"
+          element={<Authed element={<ManageTokens type={'developer'} />} />}
+        />
       </Route>
 
       {/* Navigator */}
@@ -124,14 +142,6 @@ const Routes: FC = () => {
           element={<Authed element={<CollectionDetail />} />}
         />
         <Route path="*" element={<PageNotFound />} />
-      </Route>
-
-      {/* orcidlink */}
-      <Route path="/orcidlink">
-        <Route index element={<Authed element={<ORCIDLinkFeature />} />} />
-      </Route>
-      <Route path="/orcidlink/link">
-        <Route index element={<Authed element={<ORCIDLinkCreateLink />} />} />
       </Route>
 
       {/* CDM */}

@@ -1,6 +1,9 @@
 import { Container, Stack, Tab, Tabs } from '@mui/material';
-import { FC, useEffect, useState } from 'react';
+import { skipToken } from '@reduxjs/toolkit/dist/query';
+import { FC } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { getMe } from '../../common/api/authService';
+import { useAppSelector } from '../../common/hooks';
 import { usePageTitle } from '../layout/layoutSlice';
 
 /**
@@ -10,59 +13,68 @@ export const Account: FC = () => {
   usePageTitle('Account');
   const navigate = useNavigate();
   const location = useLocation();
-  const tabs = [
-    '/account/info',
-    '/account/providers',
-    '/account/logins',
-    '/account/use-agreements',
-  ];
-  const defaultTab = tabs.findIndex((tabPath) =>
-    location.pathname.startsWith(tabPath)
-  );
-  const [activeTab, setActiveTab] = useState(
-    defaultTab === -1 ? 0 : defaultTab
-  );
+  const token = useAppSelector((s) => s.auth.token);
+  const { data: me } = getMe.useQuery(token ? { token } : skipToken);
 
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    setActiveTab(newValue);
-  };
-
-  useEffect(() => {
+  const handleChange = (event: React.SyntheticEvent, tabValue: string) => {
+    navigate(tabValue);
     document.querySelector('main')?.scrollTo(0, 0);
-  }, [activeTab]);
+  };
+  const currentTabValue = (location.pathname.match(/\/account\/[^/]*/) || [
+    '/account/info',
+  ])[0];
 
   return (
     <Container maxWidth="lg">
       <Stack spacing={4}>
-        <Tabs value={activeTab} onChange={handleChange}>
+        <Tabs value={currentTabValue} onChange={handleChange}>
           <Tab
+            value={'/account/info'}
             component="a"
             label="Account"
             id="account-tab"
             aria-controls="account-tabpanel"
-            onClick={() => navigate('info')}
           />
           <Tab
-            component="a"
+            value={'/account/providers'}
             label="Linked Providers"
             id="providers-tab"
             aria-controls="providers-tabpanel"
-            onClick={() => navigate('providers')}
           />
           <Tab
-            component="a"
+            value={'/account/sessions'}
             label="Log In Sessions"
             id="sessions-tab"
             aria-controls="sessions-tabpanel"
-            onClick={() => navigate('sessions')}
           />
           <Tab
-            component="a"
+            value={'/account/use-agreements'}
             label="Use Agreements"
             id="use-agreements-tab"
             aria-controls="use-agreements-tabpanel"
-            onClick={() => navigate('use-agreements')}
           />
+          <Tab
+            value={'/account/orcidlink'}
+            label="ORCID Record Link"
+            id="orcidlink"
+            aria-controls="orcidlink-tabpanel"
+          />
+          {me?.roles.some((r) => r.id === 'DevToken') ? (
+            <Tab
+              value={'/account/dev-tokens'}
+              label="Developer Tokens"
+              id="dev-tokens"
+              aria-controls="dev-tokens-tabpanel"
+            />
+          ) : undefined}
+          {me?.roles.some((r) => r.id === 'ServToken') ? (
+            <Tab
+              value={'/account/service-tokens'}
+              label="Service Tokens"
+              id="service-tokens"
+              aria-controls="service-tokens-tabpanel"
+            />
+          ) : undefined}
         </Tabs>
         <Outlet />
       </Stack>
